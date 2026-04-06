@@ -1,3 +1,8 @@
+# MITS-CMS-Portal
+A role-based Content Management System for MITS to manage faculty profiles, events, MoUs, and news with approval workflows.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
