@@ -1,0 +1,373 @@
+/* src/components/common/ProfileComparisonModal.module.css */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  border-radius: 12px 12px 0 0;
+}
+
+.headerInfo {
+  flex: 1;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 8px 0;
+}
+
+.headerMeta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-500);
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.changeDescription {
+  padding: 16px 24px;
+  background: #fef9c3;
+  border-bottom: 1px solid #fde047;
+}
+
+.changeDescriptionLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.changeDescriptionText {
+  font-size: 0.9375rem;
+  color: var(--gray-800);
+  line-height: 1.5;
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  padding: 12px 24px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+}
+
+.legendBox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-300);
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.section {
+  margin-bottom: 24px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sectionModified {
+  border-color: #fde047;
+  box-shadow: 0 0 0 2px #fef9c3;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.sectionTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.entryCount {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sectionBody {
+  padding: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-weight: 600;
+  border-bottom: 2px solid var(--gray-200);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.rowAdded {
+  background: #dcfce7 !important;
+}
+
+.rowModified {
+  background: #fef9c3 !important;
+}
+
+.rowDeleted {
+  background: #fee2e2 !important;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.cellModified {
+  background: #fef9c3 !important;
+  font-weight: 600;
+}
+
+.textContent {
+  font-size: 0.9375rem;
+  color: var(--gray-700);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.keyValueDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keyValueRow {
+  display: flex;
+  gap: 16px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.keyValueRow.rowModified {
+  background: #fef9c3;
+}
+
+.keyLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  min-width: 150px;
+}
+
+.keyValue {
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  word-break: break-all;
+}
+
+.commentsSection {
+  padding: 16px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+}
+
+.commentsLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.commentItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.commentItem:last-child {
+  margin-bottom: 0;
+}
+
+.actionsSection {
+  padding: 20px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  border-radius: 0 0 12px 12px;
+}
+
+.commentInput {
+  margin-bottom: 16px;
+}
+
+.commentLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.commentTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.commentTextarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: 95vh;
+  }
+
+  .modalHeader {
+    padding: 16px;
+  }
+
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+
+  .headerMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .modalBody {
+    padding: 16px;
+  }
+
+  .keyValueRow {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .keyLabel {
+    min-width: auto;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .actionButtons button {
+    width: 100%;
+  }
+}

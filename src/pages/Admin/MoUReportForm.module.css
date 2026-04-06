@@ -1,0 +1,459 @@
+/* src/pages/Admin/MoUReportForm.module.css */
+
+.formRoot {
+  padding: 20px;
+  min-height: calc(75vh - 100px);
+  overflow-y: auto;
+}
+
+/* Progress Bar */
+.progressBar {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.progressTrack {
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #1E3A8A, #2563EB);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* Section */
+.section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.sectionExpanded {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.08);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sectionHeader:hover {
+  background: var(--gray-100);
+}
+
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionNum {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--gray-400);
+  background: var(--gray-200);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+}
+
+.sectionIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sectionTitle {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gray-800);
+}
+
+.sectionHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.completeBadge {
+  color: #10B981;
+}
+
+.chevron {
+  color: var(--gray-400);
+}
+
+.sectionBody {
+  padding: 18px;
+  border-top: 1px solid var(--gray-100);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Field Grid */
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Select Input */
+.selectInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  background: var(--white);
+  transition: all 0.18s;
+}
+
+.selectInput:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.09);
+}
+
+/* Read Only */
+.readOnly {
+  background: var(--gray-100) !important;
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+.statusActive {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.statusExpired {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+/* Radio Group */
+.radioGroup {
+  display: flex;
+  gap: 16px;
+  padding-top: 6px;
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.radioItem input {
+  accent-color: var(--primary);
+}
+
+/* Purpose Grid */
+.purposeGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Checkbox Group */
+.checkboxGroup {
+  margin-bottom: 8px;
+}
+
+.checkboxLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.checkboxGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  padding: 6px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  transition: all 0.15s;
+}
+
+.checkboxItem:hover {
+  border-color: var(--gray-300);
+}
+
+.checkboxItem input {
+  display: none;
+}
+
+.checkboxBox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gray-300);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.checked .checkboxBox {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checked .checkboxBox::after {
+  content: '✓';
+  color: white;
+  font-size: 10px;
+}
+
+.checked {
+  background: var(--primary-bg);
+  border-color: var(--primary-light);
+}
+
+/* Coordinator Section */
+.coordSection {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.coordSectionTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.coordCard {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.coordCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.coordType {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--gray-700);
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  transition: all 0.15s;
+}
+
+.removeBtn:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.coordGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 14px;
+}
+
+/* Benefits Grid */
+.benefitsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Document Grid */
+.docGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.docGrid > *:first-child {
+  grid-column: 1 / -1;
+}
+
+.fileInput {
+  padding: 8px 12px;
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  background: var(--gray-50);
+  width: 100%;
+}
+
+.fileName {
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  background: var(--gray-100);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* Tracking Grid */
+.trackingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Status Grid */
+.statusGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.statusBadge.draft {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.statusBadge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusBadge.approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.statusBadge.rejected {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.remarksBox {
+  padding: 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--gray-700);
+}
+
+/* Add Button */
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--gray-500);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  margin-top: 8px;
+}
+
+.addBtn:hover {
+  border-color: var(--primary-light);
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+
+/* Form Buttons */
+.formButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fieldGrid,
+  .coordGrid,
+  .trackingGrid,
+  .docGrid {
+    grid-template-columns: 1fr;
+  }
+}

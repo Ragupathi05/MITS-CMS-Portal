@@ -1,0 +1,223 @@
+/* src/pages/HOD/Trending.module.css */
+.root { max-width: 100%; animation: fadeIn 0.3s ease; }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 9px 14px;
+  flex: 1;
+  max-width: 400px;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition);
+}
+.searchBox:focus-within {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+.searchBox input {
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  width: 100%;
+  background: transparent;
+  font-family: var(--font-sans);
+}
+.searchBox input::placeholder { color: var(--gray-400); }
+
+.trendingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.trendingCard {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  transition: var(--transition);
+}
+.trendingCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--gray-300);
+}
+
+.cardImageWrap {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+.cardImage {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.trendingCard:hover .cardImage { transform: scale(1.04); }
+
+.cardImagePlaceholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--grad-primary);
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.trendingCard:hover .cardOverlay { opacity: 1; }
+
+.playButton {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.playButton:hover { transform: scale(1.1); background: white; }
+
+.cardBody { padding: 16px; }
+
+.cardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 8px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+.reelLink {
+  color: var(--primary-light);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+.reelLink:hover { text-decoration: underline; }
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 64px 20px;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+.emptyState h3 {
+  margin: 16px 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+.emptyState p {
+  margin: 0 0 20px;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+.imageUploadSection { display: flex; flex-direction: column; gap: 12px; }
+
+.imageHint {
+  padding: 12px;
+  background: var(--warning-bg);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--warning-light);
+}
+.imageHint p { margin: 0 0 4px; font-size: 0.75rem; color: var(--gray-600); }
+.imageHint p:last-child { margin: 0; }
+
+.previewContainer {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+}
+
+.previewCard {
+  width: 160px; height: 284px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  background: var(--gray-200);
+}
+.previewImage { width: 100%; height: 100%; object-fit: cover; }
+.previewOverlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.28);
+  display: flex; align-items: center; justify-content: center;
+}
+.previewTitle {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-200);
+}
+
+@media (max-width: 768px) {
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .searchBox { max-width: none; }
+  .trendingGrid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .cardImageWrap { height: 280px; }
+}
+@media (max-width: 480px) {
+  .trendingGrid { grid-template-columns: 1fr 1fr; }
+  .cardImageWrap { height: 240px; }
+}
