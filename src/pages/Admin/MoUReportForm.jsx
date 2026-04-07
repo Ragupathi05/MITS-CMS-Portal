@@ -385,8 +385,8 @@ export default function MoUReportForm({ initial, onSave, onClose, saving }) {
         <Button variant="secondary" icon={Save} loading={saving === 'draft'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Draft', approvalStatus: 'Draft' })}>
           Save Draft
         </Button>
-        <Button icon={Send} loading={saving === 'publish'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Pending', approvalStatus: 'Pending' })}>
-          Submit for Approval
+        <Button icon={Send} loading={saving === 'publish'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Approved', approvalStatus: 'Approved' })}>
+          Submit
         </Button>
       </div>
     </div>

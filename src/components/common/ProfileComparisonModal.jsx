@@ -92,15 +92,26 @@ const KEY_VALUE_SECTIONS = {
   }
 };
 
+// Safely get an array from a diff field — handles both [] and {new:[]} shapes
+function safeArr(val) {
+  if (Array.isArray(val)) return val;
+  if (val && Array.isArray(val.new)) return val.new;
+  return [];
+}
+
 function TableSection({ sectionKey, data, differences }) {
   const config = SECTION_CONFIG[sectionKey];
   if (!config) return null;
 
-  const entries = data || [];
-  const addedIds = new Set((differences?.added?.[sectionKey] || []).map(item => item.id));
-  const modifiedItems = differences?.modified?.[sectionKey] || [];
-  const modifiedIds = new Set(modifiedItems.map(item => item.id));
-  const deletedItems = differences?.deleted?.[sectionKey] || [];
+  const entries = Array.isArray(data) ? data : [];
+  if (entries.length === 0) return null;
+
+  const addedIds = new Set(safeArr(differences?.added?.[sectionKey]).map(i => i._id || i.id));
+  const modifiedItems = Array.isArray(differences?.modified?.[sectionKey])
+    ? differences.modified[sectionKey]
+    : [];
+  const modifiedIds = new Set(modifiedItems.map(i => i._id || i.id));
+  const deletedItems = safeArr(differences?.deleted?.[sectionKey]);
 
   return (
     <div className={styles.section}>
@@ -114,38 +125,29 @@ function TableSection({ sectionKey, data, differences }) {
             <thead>
               <tr>
                 <th>S.No</th>
-                {config.columnLabels.map((label, idx) => (
-                  <th key={idx}>{label}</th>
-                ))}
+                {config.columnLabels.map((label, idx) => <th key={idx}>{label}</th>)}
               </tr>
             </thead>
             <tbody>
               {entries.map((entry, idx) => {
-                const isAdded = addedIds.has(entry.id);
-                const isModified = modifiedIds.has(entry.id);
-                const modifiedFields = modifiedItems.find(item => item.id === entry.id)?.changes || {};
-
-                let rowClass = '';
-                if (isAdded) rowClass = styles.rowAdded;
-                else if (isModified) rowClass = styles.rowModified;
-
+                const key = entry._id || entry.id || idx;
+                const isAdded = addedIds.has(key);
+                const isModified = modifiedIds.has(key);
+                const modifiedFields = modifiedItems.find(i => (i._id || i.id) === key)?.changes || {};
+                const rowClass = isAdded ? styles.rowAdded : isModified ? styles.rowModified : '';
                 return (
-                  <tr key={entry.id} className={rowClass}>
+                  <tr key={key} className={rowClass}>
                     <td>{idx + 1}</td>
-                    {config.columns.map((col, colIdx) => {
-                      const isFieldModified = modifiedFields[col];
-                      const cellClass = isFieldModified ? styles.cellModified : '';
-                      return (
-                        <td key={colIdx} className={cellClass}>
-                          {entry[col] || '-'}
-                        </td>
-                      );
-                    })}
+                    {config.columns.map((col, colIdx) => (
+                      <td key={colIdx} className={modifiedFields[col] ? styles.cellModified : ''}>
+                        {entry[col] || '-'}
+                      </td>
+                    ))}
                   </tr>
                 );
               })}
               {deletedItems.map((entry, idx) => (
-                <tr key={`deleted-${idx}`} className={styles.rowDeleted}>
+                <tr key={`del-${idx}`} className={styles.rowDeleted}>
                   <td>-</td>
                   {config.columns.map((col, colIdx) => (
                     <td key={colIdx}>{entry[col] || '-'}</td>
@@ -160,23 +162,17 @@ function TableSection({ sectionKey, data, differences }) {
   );
 }
 
-function TextSection({ sectionKey, data, differences }) {
+function TextSection({ sectionKey, data }) {
   const labels = {
     researchInterest: 'Research Interest',
     researchDetails: 'Research Details',
     otherInfo: 'Other Information'
   };
-
-  const label = labels[sectionKey] || sectionKey;
-  const isModified = differences?.modified?.[sectionKey];
-  const sectionClass = isModified ? styles.sectionModified : '';
-
   if (!data) return null;
-
   return (
-    <div className={`${styles.section} ${sectionClass}`}>
+    <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>{label}</span>
+        <span className={styles.sectionTitle}>{labels[sectionKey] || sectionKey}</span>
       </div>
       <div className={styles.sectionBody}>
         <div className={styles.textContent}>{data}</div>
@@ -185,12 +181,11 @@ function TextSection({ sectionKey, data, differences }) {
   );
 }
 
-function KeyValueSection({ sectionKey, data, differences }) {
+function KeyValueSection({ sectionKey, data }) {
   const config = KEY_VALUE_SECTIONS[sectionKey];
   if (!config || !data) return null;
-
-  const modifiedFields = differences?.modified?.[sectionKey] || {};
-
+  const hasAny = config.fields.some(f => data[f]);
+  if (!hasAny) return null;
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
@@ -201,10 +196,8 @@ function KeyValueSection({ sectionKey, data, differences }) {
           {config.fields.map((field, idx) => {
             const value = data[field];
             if (!value) return null;
-            const isModified = modifiedFields[field];
-            const rowClass = isModified ? styles.rowModified : '';
             return (
-              <div key={field} className={`${styles.keyValueRow} ${rowClass}`}>
+              <div key={field} className={styles.keyValueRow}>
                 <span className={styles.keyLabel}>{config.fieldLabels[idx]}</span>
                 <span className={styles.keyValue}>{value}</span>
               </div>
@@ -217,48 +210,29 @@ function KeyValueSection({ sectionKey, data, differences }) {
 }
 
 export default function ProfileComparisonModal({
-  isOpen,
-  onClose,
-  submission,
-  onApprove,
-  onReject,
-  showActions = false
+  isOpen, onClose, submission, onApprove, onReject, showActions = false
 }) {
   const [comment, setComment] = useState('');
 
   if (!isOpen || !submission) return null;
 
-  const {
-    title,
-    status,
-    date,
-    department,
-    changeDescription,
-    updatedProfile,
-    differences,
-    comments = []
-  } = submission;
+  const { title, status, date, department, changeDescription, updatedProfile, differences, comments = [] } = submission;
 
   const handleApprove = () => {
-    if (onApprove) {
-      onApprove(submission.id, comment);
-      setComment('');
-      onClose();
-    }
+    if (onApprove) { onApprove(submission._id || submission.id, comment); setComment(''); onClose(); }
+  };
+  const handleReject = () => {
+    if (onReject) { onReject(submission._id || submission.id, comment); setComment(''); onClose(); }
   };
 
-  const handleReject = () => {
-    if (onReject) {
-      onReject(submission.id, comment);
-      setComment('');
-      onClose();
-    }
-  };
+  const textItems   = TEXT_SECTIONS.filter(s => updatedProfile?.[s]);
+  const kvItems     = Object.keys(KEY_VALUE_SECTIONS).filter(s => updatedProfile?.[s] && Object.values(updatedProfile[s]).some(Boolean));
+  const tableItems  = Object.keys(SECTION_CONFIG).filter(s => Array.isArray(updatedProfile?.[s]) && updatedProfile[s].length > 0);
+  const hasContent  = textItems.length || kvItems.length || tableItems.length;
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
-        {/* HEADER */}
         <div className={styles.modalHeader}>
           <div className={styles.headerInfo}>
             <h2 className={styles.modalTitle}>{title}</h2>
@@ -268,12 +242,9 @@ export default function ProfileComparisonModal({
               <span className={styles.metaItem}>{department}</span>
             </div>
           </div>
-          <button className={styles.closeBtn} onClick={onClose}>
-            <X size={20} />
-          </button>
+          <button className={styles.closeBtn} onClick={onClose}><X size={20} /></button>
         </div>
 
-        {/* CHANGE DESCRIPTION */}
         {changeDescription && (
           <div className={styles.changeDescription}>
             <div className={styles.changeDescriptionLabel}>Change Description:</div>
@@ -281,64 +252,35 @@ export default function ProfileComparisonModal({
           </div>
         )}
 
-        {/* LEGEND */}
         <div className={styles.legend}>
-          <div className={styles.legendItem}>
-            <span className={styles.legendBox} style={{ background: '#fef9c3' }}></span>
-            <span>Modified</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendBox} style={{ background: '#dcfce7' }}></span>
-            <span>Added</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendBox} style={{ background: '#fee2e2' }}></span>
-            <span>Deleted</span>
-          </div>
+          <div className={styles.legendItem}><span className={styles.legendBox} style={{ background: '#dcfce7' }} /><span>Added</span></div>
+          <div className={styles.legendItem}><span className={styles.legendBox} style={{ background: '#fef9c3' }} /><span>Modified</span></div>
+          <div className={styles.legendItem}><span className={styles.legendBox} style={{ background: '#fee2e2' }} /><span>Deleted</span></div>
         </div>
 
-        {/* PROFILE CONTENT */}
         <div className={styles.modalBody}>
-          {TEXT_SECTIONS.map(section => (
-            <TextSection
-              key={section}
-              sectionKey={section}
-              data={updatedProfile?.[section]}
-              differences={differences}
-            />
-          ))}
-          {Object.keys(KEY_VALUE_SECTIONS).map(section => (
-            <KeyValueSection
-              key={section}
-              sectionKey={section}
-              data={updatedProfile?.[section]}
-              differences={differences}
-            />
-          ))}
-          {Object.keys(SECTION_CONFIG).map(section => (
-            <TableSection
-              key={section}
-              sectionKey={section}
-              data={updatedProfile?.[section]}
-              differences={differences}
-            />
-          ))}
+          {!hasContent ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>
+              No profile sections updated yet.
+            </div>
+          ) : (
+            <>
+              {textItems.map(s => <TextSection key={s} sectionKey={s} data={updatedProfile[s]} differences={differences} />)}
+              {kvItems.map(s => <KeyValueSection key={s} sectionKey={s} data={updatedProfile[s]} differences={differences} />)}
+              {tableItems.map(s => <TableSection key={s} sectionKey={s} data={updatedProfile[s]} differences={differences} />)}
+            </>
+          )}
         </div>
 
-        {/* COMMENTS */}
         {comments.length > 0 && (
           <div className={styles.commentsSection}>
             <div className={styles.commentsLabel}>Previous Comments:</div>
             {comments.map((c, idx) => (
-              <div key={idx} className={styles.commentItem}>
-                <MessageSquare size={14} />
-                <span>{c}</span>
-              </div>
+              <div key={idx} className={styles.commentItem}><MessageSquare size={14} /><span>{c}</span></div>
             ))}
           </div>
         )}
 
-        {/* ACTIONS */}
         {showActions && status === 'Pending' && (
           <div className={styles.actionsSection}>
             <div className={styles.commentInput}>
@@ -346,7 +288,7 @@ export default function ProfileComparisonModal({
               <textarea
                 className={styles.commentTextarea}
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={e => setComment(e.target.value)}
                 placeholder="Enter reason for approval or rejection..."
                 rows={3}
               />

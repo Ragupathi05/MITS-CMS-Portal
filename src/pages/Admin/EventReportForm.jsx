@@ -441,8 +441,8 @@ export default function EventReportForm({ initial, onSave, onClose, saving }) {
         <Button variant="secondary" icon={Save} loading={saving === 'draft'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Draft' })}>
           Save Draft
         </Button>
-        <Button icon={Send} loading={saving === 'publish'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Pending' })}>
-          Submit for Approval
+        <Button icon={Send} loading={saving === 'publish'} disabled={!canSubmit} onClick={() => onSave({ ...form, status: 'Approved' })}>
+          Submit
         </Button>
       </div>
     </div>

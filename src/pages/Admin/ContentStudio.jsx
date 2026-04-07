@@ -1,26 +1,17 @@
 // src/pages/Admin/ContentStudio.jsx
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { useData } from '../../context/DataContext';
 import {
-  Badge, Button, EmptyState, PageHeader,
-  FormField, Input, SlidePanel, Modal as DialogModal, useToast,
+  Badge, Button, EmptyState, PageHeader, useToast,
 } from '../../components/common/UI';
-import ImageUploader from '../../components/common/ImageUploader';
-import RichTextEditor from '../../components/common/RichTextEditor';
-import EventReportForm from './EventReportForm';
-import MoUReportForm from './MoUReportForm';
-import NewsReportForm from './NewsReportForm';
-import mouFormStyles from './MoUReportForm.module.css';
-import newsFormStyles from './NewsReportForm.module.css';
 import {
   Plus, Calendar, Handshake, Search, Pencil, Trash2,
-  Save, X, Play, Newspaper, TrendingUp, ExternalLink,
-  Tag, Eye, CheckCircle, Filter, Globe, FileText,
-  AlertTriangle,
+  Play, Newspaper, TrendingUp, ExternalLink,
+  Tag, Eye, X, Globe, AlertTriangle, MapPin, Building,
 } from 'lucide-react';
 import styles from './ContentStudio.module.css';
-import eventFormStyles from './EventReportForm.module.css';
 
 const TABS = ['Events', 'MoUs', 'News', 'Trending'];
 
@@ -38,191 +29,337 @@ const STATUS_STYLE = {
   Pending:   { color: '#92400E', bg: '#FEF3C7', dot: '#F59E0B' },
 };
 
-/* ── Tag Input ─────────────────────────────────────────────────────────────── */
-function TagInput({ tags, onChange }) {
-  const [input, setInput] = useState('');
-  const add = () => {
-    const v = input.trim();
-    if (v && !tags.includes(v)) { onChange([...tags, v]); setInput(''); }
-  };
+function StatusPill({ status }) {
+  const s = STATUS_STYLE[status] || STATUS_STYLE.Draft;
   return (
-    <div className={styles.tagInput}>
-      <div className={styles.tagList}>
-        {tags.map(t => (
-          <span key={t} className={styles.tag}>
-            {t}
-            <button onClick={() => onChange(tags.filter(x => x !== t))}><X size={10} /></button>
-          </span>
-        ))}
-      </div>
-      <div className={styles.tagInputRow}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
-          placeholder="Add tag and press Enter"
-        />
-        <button type="button" className={styles.tagAddBtn} onClick={add}>+</button>
-      </div>
+    <span className={styles.statusPill} style={{ background: s.bg, color: s.color }}>
+      <span className={styles.statusDot} style={{ background: s.dot }} />
+      {status}
+    </span>
+  );
+}
+
+/* ── View Modal ── */
+function InfoRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className={styles.infoRow}>
+      <span className={styles.infoLabel}>{label}</span>
+      <span className={styles.infoValue}>{value}</span>
     </div>
   );
 }
 
-/* ── Content Form ──────────────────────────────────────────────────────────── */
-function ContentForm({ initial, onSave, onClose, saving }) {
-  const [form, setForm] = useState({ ...initial });
-  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
-
-  const isEvent    = form.type === 'Event';
-  const isNews     = form.type === 'News';
-  const isMou      = form.type === 'MoU';
-  const isTrending = form.type === 'Trending';
-
-  // Use new EventReportForm for Events
-  if (isEvent) {
-    return (
-      <div className={eventFormStyles.eventFormContainer}>
-        <EventReportForm initial={initial} onSave={onSave} onClose={onClose} saving={saving} />
-      </div>
-    );
-  }
-
-  // Use new MoUReportForm for MoUs
-  if (isMou) {
-    return (
-      <div className={mouFormStyles.mouFormContainer}>
-        <MoUReportForm initial={initial} onSave={onSave} onClose={onClose} saving={saving} />
-      </div>
-    );
-  }
-
-  // Use new NewsReportForm for News
-  if (isNews) {
-    return (
-      <div className={newsFormStyles.newsFormContainer}>
-        <NewsReportForm initial={initial} onSave={onSave} onClose={onClose} saving={saving} />
-      </div>
-    );
-  }
-
-  const canPublish = form.title?.trim() && (isTrending ? !!form.reelUrl?.trim() : true);
-
+function InfoSection({ title, children }) {
   return (
-    <div className={styles.formWrap}>
-      <FormField label="Title *">
-        <Input
-          value={form.title}
-          onChange={e => set('title', e.target.value)}
-          placeholder={
-            isNews ? 'News headline…' :
-            isMou  ? 'MoU title…' :
-            isTrending ? 'Trending content title…' : 'Event title…'
-          }
-        />
-      </FormField>
+    <div className={styles.infoSection}>
+      <div className={styles.infoSectionTitle}>{title}</div>
+      {children}
+    </div>
+  );
+}
 
-      {(isEvent || isNews) && (
-        <FormField label="Date">
-          <Input type="date" value={form.date || ''} onChange={e => set('date', e.target.value)} />
-        </FormField>
+function EventPreview({ item }) {
+  return (
+    <>
+      {item.poster && (
+        <div className={styles.viewImgWrap}>
+          <img src={item.poster} alt={item.title} className={styles.viewImg} />
+        </div>
+      )}
+      {!item.poster && item.images?.[0]?.url && (
+        <div className={styles.viewImgWrap}>
+          <img src={item.images[0].url} alt={item.title} className={styles.viewImg} />
+        </div>
+      )}
+      <h1 className={styles.viewTitle}>{item.title}</h1>
+      <div className={styles.viewMeta}>
+        {item.eventType  && <span><Tag size={13} /> {item.eventType}</span>}
+        {item.fromDate   && <span><Calendar size={13} /> {item.fromDate}{item.toDate ? ` → ${item.toDate}` : ''}</span>}
+        {item.mode       && <span><Globe size={13} /> {item.mode}</span>}
+        {item.venue      && <span><MapPin size={13} /> {item.venue}</span>}
+        {item.department && <span><Building size={13} /> {item.department}</span>}
+      </div>
+
+      <InfoSection title="Event Details">
+        <InfoRow label="Event ID"         value={item.eventId} />
+        <InfoRow label="Duration"         value={item.duration} />
+        <InfoRow label="Address"          value={item.address} />
+        <InfoRow label="Collaboration"    value={item.collaborationDept} />
+        <InfoRow label="Registration"     value={item.registrationLink} />
+      </InfoSection>
+
+      {item.description && (
+        <InfoSection title="Description">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.description }} />
+        </InfoSection>
       )}
 
-      {isMou && (
-        <>
-          <FormField label="Partner Organization *">
-            <Input value={form.organization || ''} onChange={e => set('organization', e.target.value)} placeholder="Organization name…" />
-          </FormField>
-          <FormField label="Duration">
-            <Input value={form.duration || ''} onChange={e => set('duration', e.target.value)} placeholder="e.g. 3 Years (2024–2027)" />
-          </FormField>
-        </>
-      )}
-
-      {isTrending && (
-        <>
-          <FormField label="Reel URL (Instagram / YouTube Shorts) *">
-            <Input value={form.reelUrl || ''} onChange={e => set('reelUrl', e.target.value)} placeholder="https://www.instagram.com/reel/…" />
-          </FormField>
-          <FormField label="Date">
-            <Input type="date" value={form.date || ''} onChange={e => set('date', e.target.value)} />
-          </FormField>
-        </>
-      )}
-
-      {!isTrending && (
-        <FormField label="Description / Content">
-          <RichTextEditor value={form.description || ''} onChange={v => set('description', v)} placeholder="Write a detailed description…" />
-        </FormField>
-      )}
-
-      {(isEvent || isNews) && (
-        <FormField label="Tags">
-          <TagInput tags={form.tags || []} onChange={v => set('tags', v)} />
-        </FormField>
-      )}
-
-      {!isTrending && (
-        <FormField label={isMou ? 'Document / Images' : isNews ? 'News Images' : 'Event Images'}>
-          <ImageUploader images={form.images || []} onChange={imgs => set('images', imgs)} multiple />
-        </FormField>
-      )}
-
-      {isTrending && (
-        <>
-          <FormField label="Cover Image (Portrait 9:16 — e.g. 1080×1920)">
-            <div className={styles.imageUploadSection}>
-              <ImageUploader
-                images={form.coverImage ? [{ id: 'cover', url: form.coverImage }] : []}
-                onChange={imgs => set('coverImage', imgs[0]?.url || null)}
-                multiple={false}
-              />
-              <div className={styles.imageHint}>
-                <p>⚠ Must be portrait (9:16). Example: 1080×1920px</p>
+      {item.resourcePersons?.length > 0 && (
+        <InfoSection title={`Resource Persons (${item.resourcePersons.length})`}>
+          {item.resourcePersons.map((rp, i) => (
+            <div key={i} className={styles.personCard}>
+              <div className={styles.personName}>{rp.name}</div>
+              <div className={styles.personMeta}>
+                {rp.designation && <span>{rp.designation}</span>}
+                {rp.institute   && <span>{rp.institute}</span>}
+                {rp.experience  && <span>{rp.experience} yrs exp</span>}
               </div>
             </div>
-          </FormField>
-          {form.coverImage && (
-            <FormField label="Preview">
-              <div className={styles.previewContainer}>
-                <div className={styles.previewCard}>
-                  <img src={form.coverImage} alt="Preview" className={styles.previewImage} />
-                  <div className={styles.previewOverlay}><Play size={32} color="white" /></div>
-                  <div className={styles.previewTitle}>{form.title || 'Title'}</div>
-                </div>
-              </div>
-            </FormField>
-          )}
-        </>
+          ))}
+        </InfoSection>
       )}
 
-      <div className={styles.formActions}>
-        <Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
-        <Button
-          variant="secondary"
-          icon={Save}
-          loading={saving === 'draft'}
-          disabled={!!saving || !form.title?.trim()}
-          onClick={() => onSave({ ...form, status: 'Draft' })}
-        >
-          Save Draft
-        </Button>
-        <Button
-          icon={CheckCircle}
-          loading={saving === 'publish'}
-          disabled={!!saving || !canPublish}
-          onClick={() => onSave({ ...form, status: 'Published' })}
-        >
-          Publish
-        </Button>
+      {(item.participantTypes?.length > 0 || item.totalRegistered) && (
+        <InfoSection title="Participants">
+          {item.participantTypes?.length > 0 && (
+            <InfoRow label="Types" value={item.participantTypes.join(', ')} />
+          )}
+          <InfoRow label="Registered" value={item.totalRegistered} />
+          <InfoRow label="Attended"   value={item.totalAttended} />
+          {item.gradLevels?.length > 0 && <InfoRow label="Level" value={item.gradLevels.join(', ')} />}
+          {item.studentYears?.length > 0 && <InfoRow label="Years" value={item.studentYears.join(', ')} />}
+        </InfoSection>
+      )}
+
+      {item.outcome && (
+        <InfoSection title="Outcome / Summary">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.outcome }} />
+        </InfoSection>
+      )}
+
+      {item.coordinators?.length > 0 && (
+        <InfoSection title={`Coordinators (${item.coordinators.length})`}>
+          {item.coordinators.map((c, i) => (
+            <div key={i} className={styles.personCard}>
+              <div className={styles.personName}>{c.name}</div>
+              <div className={styles.personMeta}>
+                {c.email   && <span>{c.email}</span>}
+                {c.contact && <span>{c.contact}</span>}
+              </div>
+            </div>
+          ))}
+        </InfoSection>
+      )}
+
+      {(item.approvedBudget || item.expenditure || item.sponsorOrg) && (
+        <InfoSection title="Budget & Sponsorship">
+          <InfoRow label="Approved Budget" value={item.approvedBudget ? `₹${item.approvedBudget}` : null} />
+          <InfoRow label="Expenditure"     value={item.expenditure    ? `₹${item.expenditure}`    : null} />
+          <InfoRow label="Sponsor Org"     value={item.sponsorOrg} />
+          <InfoRow label="Sponsor Amount"  value={item.sponsorAmount  ? `₹${item.sponsorAmount}`  : null} />
+        </InfoSection>
+      )}
+
+      {item.feedbackLink && (
+        <InfoSection title="Feedback">
+          <a href={item.feedbackLink} target="_blank" rel="noopener noreferrer" className={styles.linkBtn}>
+            <ExternalLink size={13} /> Feedback Form
+          </a>
+        </InfoSection>
+      )}
+
+      {item.geoPhotos?.length > 0 && (
+        <InfoSection title={`Geo-tagged Photos (${item.geoPhotos.length})`}>
+          <div className={styles.viewGalleryGrid}>
+            {item.geoPhotos.map((img, i) => (
+              <img key={i} src={img.url} alt="" className={styles.viewGalleryImg} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
+
+      {item.images?.length > 0 && (
+        <InfoSection title={`Gallery (${item.images.length})`}>
+          <div className={styles.viewGalleryGrid}>
+            {item.images.map((img, i) => (
+              <img key={i} src={img.url} alt="" className={styles.viewGalleryImg} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
+
+      {item.tags?.length > 0 && (
+        <div className={styles.viewTags}>
+          {item.tags.map(t => <span key={t} className={styles.viewTag}><Tag size={11} />{t}</span>)}
+        </div>
+      )}
+    </>
+  );
+}
+
+function MoUPreview({ item }) {
+  return (
+    <>
+      {item.signingImages?.[0]?.url && (
+        <div className={styles.viewImgWrap}>
+          <img src={item.signingImages[0].url} alt={item.title} className={styles.viewImg} />
+        </div>
+      )}
+      <h1 className={styles.viewTitle}>{item.title}</h1>
+      <div className={styles.viewMeta}>
+        {item.partnerOrg && <span><Handshake size={13} /> {item.partnerOrg}</span>}
+        {item.country    && <span><Globe size={13} /> {item.country}</span>}
+        {item.orgType    && <span><Building size={13} /> {item.orgType}</span>}
+        {item.startDate  && <span><Calendar size={13} /> {item.startDate}{item.endDate ? ` → ${item.endDate}` : ''}</span>}
       </div>
+
+      <InfoSection title="MoU Details">
+        <InfoRow label="MoU ID"       value={item.mouId} />
+        <InfoRow label="Category"     value={item.mouCategory} />
+        <InfoRow label="Duration"     value={item.duration} />
+        <InfoRow label="Renewal"      value={item.renewalOption} />
+        <InfoRow label="Department"   value={item.department} />
+      </InfoSection>
+
+      {item.purpose && (
+        <InfoSection title="Purpose">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.purpose }} />
+        </InfoSection>
+      )}
+      {item.scope && (
+        <InfoSection title="Scope">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.scope }} />
+        </InfoSection>
+      )}
+      {item.objectives && (
+        <InfoSection title="Objectives">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.objectives }} />
+        </InfoSection>
+      )}
+
+      {item.collabAreas?.length > 0 && (
+        <InfoSection title="Areas of Collaboration">
+          <div className={styles.tagList}>
+            {item.collabAreas.map(a => <span key={a} className={styles.viewTag}>{a}</span>)}
+          </div>
+        </InfoSection>
+      )}
+
+      {(item.studentBenefits || item.facultyBenefits || item.expectedOutcomes) && (
+        <InfoSection title="Benefits & Outcomes">
+          {item.studentBenefits && (
+            <><div className={styles.subLabel}>Students</div>
+            <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.studentBenefits }} /></>)}
+          {item.facultyBenefits && (
+            <><div className={styles.subLabel}>Faculty</div>
+            <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.facultyBenefits }} /></>)}
+          {item.expectedOutcomes && (
+            <><div className={styles.subLabel}>Expected Outcomes</div>
+            <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.expectedOutcomes }} /></>)}
+        </InfoSection>
+      )}
+
+      {(item.internalCoordinators?.length > 0 || item.externalCoordinators?.length > 0) && (
+        <InfoSection title="Coordinators">
+          {item.internalCoordinators?.map((c, i) => (
+            <div key={i} className={styles.personCard}>
+              <div className={styles.personName}>{c.name} <span className={styles.coordType}>Internal</span></div>
+              <div className={styles.personMeta}>{c.email && <span>{c.email}</span>}{c.contact && <span>{c.contact}</span>}</div>
+            </div>
+          ))}
+          {item.externalCoordinators?.map((c, i) => (
+            <div key={i} className={styles.personCard}>
+              <div className={styles.personName}>{c.name} <span className={styles.coordType}>External</span></div>
+              <div className={styles.personMeta}>{c.designation && <span>{c.designation}</span>}{c.email && <span>{c.email}</span>}</div>
+            </div>
+          ))}
+        </InfoSection>
+      )}
+
+      {(item.activitiesConducted || item.studentsBenefited || item.internshipsProvided || item.jointEvents) && (
+        <InfoSection title="Implementation Tracking">
+          <InfoRow label="Activities Conducted"  value={item.activitiesConducted} />
+          <InfoRow label="Students Benefited"    value={item.studentsBenefited} />
+          <InfoRow label="Internships Provided"  value={item.internshipsProvided} />
+          <InfoRow label="Joint Events"          value={item.jointEvents} />
+        </InfoSection>
+      )}
+
+      {item.signingImages?.length > 0 && (
+        <InfoSection title={`Signing Images (${item.signingImages.length})`}>
+          <div className={styles.viewGalleryGrid}>
+            {item.signingImages.map((img, i) => (
+              <img key={i} src={img.url} alt="" className={styles.viewGalleryImg} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
+    </>
+  );
+}
+
+function NewsPreview({ item }) {
+  return (
+    <>
+      {item.coverImage && (
+        <div className={styles.viewImgWrap}>
+          <img src={item.coverImage} alt={item.title} className={styles.viewImg} />
+        </div>
+      )}
+      <h1 className={styles.viewTitle}>{item.title}</h1>
+      <div className={styles.viewMeta}>
+        {item.category   && <span><Tag size={13} /> {item.category}</span>}
+        {item.date       && <span><Calendar size={13} /> {item.date}</span>}
+        {item.department && <span><Building size={13} /> {item.department}</span>}
+        {item.featured === 'Yes' && <span style={{color:'#D97706',fontWeight:700}}>⭐ Featured</span>}
+      </div>
+
+      {item.summary && (
+        <InfoSection title="Summary">
+          <p className={styles.summaryText}>{item.summary}</p>
+        </InfoSection>
+      )}
+
+      {item.fullContent && (
+        <InfoSection title="Full Article">
+          <div className={styles.richText} dangerouslySetInnerHTML={{ __html: item.fullContent }} />
+        </InfoSection>
+      )}
+
+      {item.tags?.length > 0 && (
+        <div className={styles.viewTags}>
+          {item.tags.map(t => <span key={t} className={styles.viewTag}><Tag size={11} />{t}</span>)}
+        </div>
+      )}
+
+      {item.gallery?.length > 0 && (
+        <InfoSection title={`Gallery (${item.gallery.length})`}>
+          <div className={styles.viewGalleryGrid}>
+            {item.gallery.map((img, i) => (
+              <img key={i} src={img.url} alt="" className={styles.viewGalleryImg} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
+    </>
+  );
+}
+
+function TrendingPreview({ item }) {
+  return (
+    <div className={styles.viewTrendingWrap}>
+      <div className={styles.viewTrendingCard}>
+        {item.coverImage
+          ? <img src={item.coverImage} alt={item.title} className={styles.viewTrendingImg} />
+          : <div className={styles.viewTrendingPlaceholder}><Play size={48} color="white" /></div>}
+        <div className={styles.viewTrendingOverlay}><Play size={40} color="white" /></div>
+        <div className={styles.viewTrendingInfo}>
+          <h2>{item.title}</h2>
+          {item.date && <p>{item.date}</p>}
+        </div>
+      </div>
+      {item.reelUrl && (
+        <a href={item.reelUrl} target="_blank" rel="noopener noreferrer" className={styles.viewReelBtn}>
+          <ExternalLink size={15} /> Open Reel
+        </a>
+      )}
     </div>
   );
 }
 
-/* ── View Modal ────────────────────────────────────────────────────────────── */
 function ViewModal({ item, onClose, onEdit }) {
   if (!item) return null;
-  const isTrending = item.type === 'Trending';
   const tabKey = { Event: 'Events', MoU: 'MoUs', News: 'News', Trending: 'Trending' }[item.type];
   const meta = TAB_META[tabKey] || TAB_META.Events;
 
@@ -243,148 +380,18 @@ function ViewModal({ item, onClose, onEdit }) {
             <button className={styles.viewClose} onClick={onClose}><X size={16} /></button>
           </div>
         </div>
-
         <div className={styles.viewBody}>
-          {isTrending ? (
-            <div className={styles.viewTrendingWrap}>
-              <div className={styles.viewTrendingCard}>
-                {item.coverImage
-                  ? <img src={item.coverImage} alt={item.title} className={styles.viewTrendingImg} />
-                  : <div className={styles.viewTrendingPlaceholder}><Play size={48} color="white" /></div>}
-                <div className={styles.viewTrendingOverlay}><Play size={40} color="white" /></div>
-                <div className={styles.viewTrendingInfo}>
-                  <h2>{item.title}</h2>
-                  <p>{item.date}</p>
-                </div>
-              </div>
-              {item.reelUrl && (
-                <a href={item.reelUrl} target="_blank" rel="noopener noreferrer" className={styles.viewReelBtn}>
-                  <ExternalLink size={15} /> Open Reel
-                </a>
-              )}
-            </div>
-          ) : (
-            <>
-              {item.images?.length > 0 && (
-                <div className={styles.viewImgWrap}>
-                  <img src={item.images[0].url} alt={item.title} className={styles.viewImg} />
-                </div>
-              )}
-              <h1 className={styles.viewTitle}>{item.title}</h1>
-              <div className={styles.viewMeta}>
-                {item.date         && <span><Calendar  size={13} /> {item.date}</span>}
-                {item.organization && <span><Handshake size={13} /> {item.organization}{item.duration ? ` · ${item.duration}` : ''}</span>}
-                {item.department   && <span><Globe     size={13} /> {item.department}</span>}
-              </div>
-              {item.tags?.length > 0 && (
-                <div className={styles.viewTags}>
-                  {item.tags.map(t => <span key={t} className={styles.viewTag}><Tag size={11} />{t}</span>)}
-                </div>
-              )}
-              {item.description && (
-                <div className={styles.viewDescription} dangerouslySetInnerHTML={{ __html: item.description }} />
-              )}
-              {item.images?.length > 1 && (
-                <div className={styles.viewGallery}>
-                  <div className={styles.viewGalleryLabel}>Gallery ({item.images.length})</div>
-                  <div className={styles.viewGalleryGrid}>
-                    {item.images.map((img, i) => (
-                      <img key={i} src={img.url} alt="" className={styles.viewGalleryImg} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          {item.type === 'Event'    && <EventPreview    item={item} />}
+          {item.type === 'MoU'      && <MoUPreview      item={item} />}
+          {item.type === 'News'     && <NewsPreview      item={item} />}
+          {item.type === 'Trending' && <TrendingPreview  item={item} />}
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Status Pill ───────────────────────────────────────────────────────────── */
-function StatusPill({ status }) {
-  const s = STATUS_STYLE[status] || STATUS_STYLE.Draft;
-  return (
-    <span className={styles.statusPill} style={{ background: s.bg, color: s.color }}>
-      <span className={styles.statusDot} style={{ background: s.dot }} />
-      {status}
-    </span>
-  );
-}
-
-/* ── Content Card ──────────────────────────────────────────────────────────── */
-function ContentCard({ item, onEdit, onDelete, onView, tabMeta }) {
-  const isTrending = item.type === 'Trending';
-  const isPublished = item.status === 'Published' || item.status === 'Approved';
-
-  return (
-    <div className={`${styles.contentCard} ${isPublished ? styles.contentCardPublished : ''}`}>
-      {/* Thumbnail */}
-      <div
-        className={`${styles.cardThumb} ${isTrending ? styles.cardThumbTrending : ''}`}
-        onClick={() => onView(item)}
-      >
-        {item.images?.[0]?.url ? (
-          <img src={item.images[0].url} alt="" className={styles.cardThumbImg} />
-        ) : item.coverImage ? (
-          <img src={item.coverImage} alt="" className={styles.cardThumbImg} style={{ objectPosition: 'top' }} />
-        ) : (
-          <div className={styles.cardThumbPlaceholder} style={{ background: tabMeta.bg }}>
-            <tabMeta.icon size={32} color={tabMeta.color} style={{ opacity: 0.5 }} />
-          </div>
-        )}
-        <div className={styles.cardThumbOverlay}>
-          <button className={styles.cardViewBtn}><Eye size={14} /> Preview</button>
-        </div>
-        {/* Published indicator stripe */}
-        {isPublished && <div className={styles.cardPublishedStripe} />}
-      </div>
-
-      {/* Body */}
-      <div className={styles.cardBody}>
-        <div className={styles.cardTopRow}>
-          <StatusPill status={item.status} />
-          {item.date && <span className={styles.cardDate}><Calendar size={11} />{item.date}</span>}
-        </div>
-
-        <h3 className={styles.cardTitle}>{item.title}</h3>
-
-        {item.organization && (
-          <div className={styles.cardOrg}><Handshake size={11} />{item.organization}{item.duration ? ` · ${item.duration}` : ''}</div>
-        )}
-        {item.reelUrl && (
-          <a href={item.reelUrl} target="_blank" rel="noopener noreferrer" className={styles.cardReelLink}>
-            <ExternalLink size={11} /> View Reel
-          </a>
-        )}
-
-        {item.tags?.length > 0 && (
-          <div className={styles.cardTags}>
-            {item.tags.slice(0, 3).map(t => (
-              <span key={t} className={styles.tagPill}><Tag size={9} />{t}</span>
-            ))}
-            {item.tags.length > 3 && <span className={styles.tagMore}>+{item.tags.length - 3}</span>}
-          </div>
-        )}
-
-        <div className={styles.cardActions}>
-          <button className={styles.cardActionBtn} onClick={() => onView(item)} title="Preview">
-            <Eye size={14} />
-          </button>
-          <button className={`${styles.cardActionBtn} ${styles.cardActionEdit}`} onClick={() => onEdit(item)} title="Edit">
-            <Pencil size={14} />
-          </button>
-          <button className={`${styles.cardActionBtn} ${styles.cardActionDelete}`} onClick={() => onDelete(item)} title="Delete">
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Delete Confirm ────────────────────────────────────────────────────────── */
+/* ── Delete Confirm ── */
 function DeleteConfirm({ item, onConfirm, onCancel }) {
   return (
     <div className={styles.confirmOverlay} onClick={e => e.target === e.currentTarget && onCancel()}>
@@ -403,23 +410,82 @@ function DeleteConfirm({ item, onConfirm, onCancel }) {
   );
 }
 
-/* ── Main ──────────────────────────────────────────────────────────────────── */
+/* ── Content Card ── */
+function ContentCard({ item, onEdit, onDelete, onView, tabMeta }) {
+  const isTrending  = item.type === 'Trending';
+  const isPublished = item.status === 'Published' || item.status === 'Approved';
+
+  return (
+    <div className={`${styles.contentCard} ${isPublished ? styles.contentCardPublished : ''}`}>
+      <div
+        className={`${styles.cardThumb} ${isTrending ? styles.cardThumbTrending : ''}`}
+        onClick={() => onView(item)}
+      >
+        {item.images?.[0]?.url ? (
+          <img src={item.images[0].url} alt="" className={styles.cardThumbImg} />
+        ) : item.coverImage ? (
+          <img src={item.coverImage} alt="" className={styles.cardThumbImg} style={{ objectPosition: 'top' }} />
+        ) : (
+          <div className={styles.cardThumbPlaceholder} style={{ background: tabMeta.bg }}>
+            <tabMeta.icon size={32} color={tabMeta.color} style={{ opacity: 0.5 }} />
+          </div>
+        )}
+        <div className={styles.cardThumbOverlay}>
+          <button className={styles.cardViewBtn}><Eye size={14} /> Preview</button>
+        </div>
+        {isPublished && <div className={styles.cardPublishedStripe} />}
+      </div>
+
+      <div className={styles.cardBody}>
+        <div className={styles.cardTopRow}>
+          <StatusPill status={item.status} />
+          {item.date && <span className={styles.cardDate}><Calendar size={11} />{item.date}</span>}
+        </div>
+        <h3 className={styles.cardTitle}>{item.title}</h3>
+        {item.organization && (
+          <div className={styles.cardOrg}><Handshake size={11} />{item.organization}{item.duration ? ` · ${item.duration}` : ''}</div>
+        )}
+        {item.reelUrl && (
+          <a href={item.reelUrl} target="_blank" rel="noopener noreferrer" className={styles.cardReelLink}>
+            <ExternalLink size={11} /> View Reel
+          </a>
+        )}
+        {item.tags?.length > 0 && (
+          <div className={styles.cardTags}>
+            {item.tags.slice(0, 3).map(t => (
+              <span key={t} className={styles.tagPill}><Tag size={9} />{t}</span>
+            ))}
+            {item.tags.length > 3 && <span className={styles.tagMore}>+{item.tags.length - 3}</span>}
+          </div>
+        )}
+        <div className={styles.cardActions}>
+          <button className={styles.cardActionBtn} onClick={() => onView(item)} title="Preview">
+            <Eye size={14} />
+          </button>
+          <button className={`${styles.cardActionBtn} ${styles.cardActionEdit}`} onClick={() => onEdit(item)} title="Edit">
+            <Pencil size={14} />
+          </button>
+          <button className={`${styles.cardActionBtn} ${styles.cardActionDelete}`} onClick={() => onDelete(item)} title="Delete">
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main ── */
 export default function ContentStudio() {
   const { user } = useAuth();
-  const {
-    events, addEvent, updateEvent, deleteEvent,
-    trending, addTrending, updateTrending, deleteTrending,
-    faculty,
-  } = useData();
+  const { events, deleteEvent, trending, deleteTrending, faculty } = useData();
+  const navigate = useNavigate();
   const toast = useToast();
 
   const [activeTab,    setActiveTab]    = useState('Events');
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [deptFilter,   setDeptFilter]   = useState('All');
-  const [panel,        setPanel]        = useState(null);   // null | 'new' | item
-  const [saving,       setSaving]       = useState(null);   // null | 'draft' | 'publish'
-  const [deleteTarget, setDeleteTarget] = useState(null);   // item | null
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [viewItem,     setViewItem]     = useState(null);
 
   const isAdmin       = user?.role === 'ADMIN';
@@ -431,7 +497,6 @@ export default function ContentStudio() {
     [faculty]
   );
 
-  // Raw items for active tab
   const allItems = useMemo(() => {
     const base = isTrendingTab
       ? trending.filter(t => isAdmin || t.department === user?.department)
@@ -439,7 +504,6 @@ export default function ContentStudio() {
     return base;
   }, [activeTab, events, trending, isAdmin, user?.department]);
 
-  // Filtered items
   const items = useMemo(() => allItems.filter(item =>
     (statusFilter === 'All' || item.status === statusFilter) &&
     (deptFilter   === 'All' || item.department === deptFilter) &&
@@ -447,7 +511,6 @@ export default function ContentStudio() {
                 item.organization?.toLowerCase().includes(search.toLowerCase()))
   ), [allItems, statusFilter, deptFilter, search]);
 
-  // Tab counts (unfiltered)
   const tabCounts = useMemo(() => ({
     Events:   events.filter(e => e.type === 'Event').length,
     MoUs:     events.filter(e => e.type === 'MoU').length,
@@ -455,44 +518,22 @@ export default function ContentStudio() {
     Trending: trending.length,
   }), [events, trending]);
 
-  const getEmpty = () => {
-    const base = { status: 'Draft', department: user?.department };
-    if (activeTab === 'Events')   return { ...base, type: 'Event',    title: '', date: '',         description: '', images: [], tags: [] };
-    if (activeTab === 'MoUs')     return { ...base, type: 'MoU',      title: '', organization: '', duration: '',    description: '', images: [] };
-    if (activeTab === 'News')     return { ...base, type: 'News',     title: '', date: '',         description: '', images: [], tags: [] };
-    return                               { ...base, type: 'Trending', title: '', reelUrl: '',      date: '',        coverImage: null };
+  const handleEdit = (item) => {
+    const type = item.type;
+    const id   = item._id || item.id;
+    navigate(`/content/edit?type=${type}&id=${id}`);
   };
 
-  const handleSave = (data) => {
-    const isNew    = panel === 'new';
-    const isDraft  = data.status === 'Draft';
-    setSaving(isDraft ? 'draft' : 'publish');
-
-    setTimeout(() => {
-      if (isTrendingTab) {
-        if (isNew) addTrending({ ...data, department: user?.department });
-        else       updateTrending(panel.id, data);
-      } else {
-        if (isNew) addEvent({ ...data, department: user?.department });
-        else       updateEvent(panel.id, data);
-      }
-      setSaving(null);
-      setPanel(null);
-      toast(
-        isNew
-          ? `${tabMeta.type} ${isDraft ? 'saved as draft' : 'published'} successfully`
-          : `${tabMeta.type} updated`,
-        isDraft ? 'info' : 'success'
-      );
-    }, 400);
+  const handleNew = () => {
+    navigate(`/content/edit?type=${tabMeta.type}`);
   };
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    if (isTrendingTab) deleteTrending(deleteTarget.id);
-    else               deleteEvent(deleteTarget.id);
-    // close view modal if it was showing the deleted item
-    if (viewItem?.id === deleteTarget.id) setViewItem(null);
+    const id = deleteTarget._id || deleteTarget.id;
+    if (isTrendingTab) deleteTrending(id);
+    else               deleteEvent(id);
+    if (viewItem && (viewItem._id || viewItem.id) === id) setViewItem(null);
     setDeleteTarget(null);
     toast('Item deleted', 'warning');
   };
@@ -502,7 +543,6 @@ export default function ContentStudio() {
     setSearch('');
     setStatusFilter('All');
     setDeptFilter('All');
-    setPanel(null);
   };
 
   const newLabel = activeTab === 'MoUs' ? 'New MoU' : `New ${activeTab.replace(/s$/, '')}`;
@@ -511,15 +551,13 @@ export default function ContentStudio() {
     <div className={styles.root}>
       <PageHeader
         title="Content Studio"
-        subtitle="Create, manage and publish events, MoUs, news and trending content"
+        subtitle="View and manage events, MoUs, news and trending content"
         actions={
-          <Button icon={Plus} onClick={() => setPanel('new')}>
-            {newLabel}
-          </Button>
+          <Button icon={Plus} onClick={handleNew}>{newLabel}</Button>
         }
       />
 
-      {/* ── TABS ── */}
+      {/* TABS */}
       <div className={styles.tabsWrap}>
         <div className={styles.tabs}>
           {TABS.map(tab => {
@@ -542,7 +580,6 @@ export default function ContentStudio() {
           })}
         </div>
 
-        {/* ── TOOLBAR ── */}
         <div className={styles.toolbar}>
           <div className={styles.searchBox}>
             <Search size={14} color="var(--gray-400)" />
@@ -555,14 +592,12 @@ export default function ContentStudio() {
               <button className={styles.clearSearch} onClick={() => setSearch('')}><X size={12} /></button>
             )}
           </div>
-
           <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="All">All Status</option>
             <option value="Published">Published</option>
+            <option value="Approved">Approved</option>
             <option value="Draft">Draft</option>
-            <option value="Pending">Pending</option>
           </select>
-
           {isAdmin && (
             <select className={styles.filterSelect} value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
               {departments.map(d => <option key={d} value={d}>{d === 'All' ? 'All Departments' : d}</option>)}
@@ -571,7 +606,7 @@ export default function ContentStudio() {
         </div>
       </div>
 
-      {/* ── STATS BAR ── */}
+      {/* STATS BAR */}
       <div className={styles.statsBar}>
         <span className={styles.statsBarCount}>
           <span style={{ color: tabMeta.color, fontWeight: 800 }}>{items.length}</span>
@@ -587,7 +622,7 @@ export default function ContentStudio() {
         </span>
       </div>
 
-      {/* ── GRID ── */}
+      {/* GRID */}
       {items.length === 0 ? (
         <div className={styles.emptyWrap}>
           <EmptyState
@@ -596,7 +631,7 @@ export default function ContentStudio() {
             subtitle={search || statusFilter !== 'All' ? 'Try adjusting your filters.' : `Click "${newLabel}" to create your first ${activeTab.toLowerCase().replace(/s$/, '')}.`}
             action={
               !search && statusFilter === 'All' && (
-                <Button icon={Plus} onClick={() => setPanel('new')}>{newLabel}</Button>
+                <Button icon={Plus} onClick={handleNew}>{newLabel}</Button>
               )
             }
           />
@@ -605,10 +640,10 @@ export default function ContentStudio() {
         <div className={`${styles.grid} ${isTrendingTab ? styles.trendingGrid : ''}`}>
           {items.map(item => (
             <ContentCard
-              key={item.id}
+              key={item._id || item.id}
               item={item}
               tabMeta={tabMeta}
-              onEdit={setPanel}
+              onEdit={handleEdit}
               onDelete={setDeleteTarget}
               onView={setViewItem}
             />
@@ -616,102 +651,16 @@ export default function ContentStudio() {
         </div>
       )}
 
-      {/* ── VIEW MODAL ── */}
+      {/* VIEW MODAL */}
       {viewItem && (
         <ViewModal
           item={viewItem}
           onClose={() => setViewItem(null)}
-          onEdit={(item) => { setViewItem(null); setPanel(item); }}
+          onEdit={(item) => { setViewItem(null); handleEdit(item); }}
         />
       )}
 
-      {/* ── MODAL FOR EVENTS ── */}
-      {panel && activeTab === 'Events' && (
-        <DialogModal
-          title={`${panel === 'new' ? 'Create' : 'Edit'} Event Report`}
-          onClose={() => setPanel(null)}
-          size="xl"
-        >
-          <div className={styles.eventFormContainer} style={{ maxHeight: '85vh', overflow: 'auto' }}>
-            <ContentForm
-              initial={panel === 'new' ? getEmpty() : { ...panel }}
-              onSave={handleSave}
-              onClose={() => setPanel(null)}
-              saving={saving}
-            />
-          </div>
-        </DialogModal>
-      )}
-
-      {/* ── MODAL FOR MOUs ── */}
-      {panel && activeTab === 'MoUs' && (
-        <DialogModal
-          title={`${panel === 'new' ? 'Create' : 'Edit'} MoU Report`}
-          onClose={() => setPanel(null)}
-          size="xl"
-        >
-          <div className={styles.mouFormContainer} style={{ maxHeight: '85vh', overflow: 'auto' }}>
-            <ContentForm
-              initial={panel === 'new' ? getEmpty() : { ...panel }}
-              onSave={handleSave}
-              onClose={() => setPanel(null)}
-              saving={saving}
-            />
-          </div>
-        </DialogModal>
-      )}
-
-      {/* ── MODAL FOR NEWS ── */}
-      {panel && activeTab === 'News' && (
-        <DialogModal
-          title={`${panel === 'new' ? 'Create' : 'Edit'} News`}
-          onClose={() => setPanel(null)}
-          size="xl"
-        >
-          <div className={styles.newsFormContainer} style={{ maxHeight: '85vh', overflow: 'auto' }}>
-            <ContentForm
-              initial={panel === 'new' ? getEmpty() : { ...panel }}
-              onSave={handleSave}
-              onClose={() => setPanel(null)}
-              saving={saving}
-            />
-          </div>
-        </DialogModal>
-      )}
-
-      {/* ── MODAL FOR TRENDING ── */}
-      {panel && activeTab === 'Trending' && (
-        <DialogModal
-          title={`${panel === 'new' ? 'Create' : 'Edit'} Trending Content`}
-          onClose={() => setPanel(null)}
-          size="xl"
-        >
-          <ContentForm
-            initial={panel === 'new' ? getEmpty() : { ...panel }}
-            onSave={handleSave}
-            onClose={() => setPanel(null)}
-            saving={saving}
-          />
-        </DialogModal>
-      )}
-
-      {/* ── SLIDE PANEL FOR OTHERS ── */}
-      {panel && !['Events', 'MoUs', 'News', 'Trending'].includes(activeTab) && (
-        <SlidePanel
-          title={`${panel === 'new' ? 'New' : 'Edit'} ${activeTab.replace(/s$/, '')}`}
-          onClose={() => setPanel(null)}
-          size="lg"
-        >
-          <ContentForm
-            initial={panel === 'new' ? getEmpty() : { ...panel }}
-            onSave={handleSave}
-            onClose={() => setPanel(null)}
-            saving={saving}
-          />
-        </SlidePanel>
-      )}
-
-      {/* ── DELETE CONFIRM ── */}
+      {/* DELETE CONFIRM */}
       {deleteTarget && (
         <DeleteConfirm
           item={deleteTarget}

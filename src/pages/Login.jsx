@@ -16,38 +16,40 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState(null);
 
   const doLogin = (role) => {
-    setLoading(true);
+    const quickCreds = {
+      faculty: { email: 'surya@mits.edu', password: 'Surya@123' },
+      hod:     { email: 'padma@mits.edu', password: 'Surya@123' },
+      admin:   { email: 'admin@mits.edu', password: 'Surya@123' },
+    };
+    const c = quickCreds[role];
+    setEmail(c.email);
+    setPassword(c.password);
     setSelectedRole(role);
-    setTimeout(() => {
-      const demoUsers = {
-        faculty: { id: 'f1', name: 'Dr. Priya Sharma', email: 'priya@mits.edu', role: 'FACULTY', department: 'Computer Science' },
-        hod: { id: 'h1', name: 'Prof. R. Kumar', email: 'kumar@mits.edu', role: 'HOD', department: 'Computer Science' },
-        admin: { id: 'a1', name: 'Admin Meera Nair', email: 'meera@mits.edu', role: 'ADMIN', department: 'Administration' },
-      };
-      login(demoUsers[role]);
+    handleApiLogin(c.email, c.password);
+  };
+
+  const handleApiLogin = async (loginEmail, loginPassword) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      login(data);
       navigate('/dashboard');
-    }, 600);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    setTimeout(() => {
-      const demoCredentials = {
-        'faculty@mits.edu': { id: 'f1', name: 'Dr. Priya Sharma', email: 'faculty@mits.edu', role: 'FACULTY', department: 'Computer Science' },
-        'hod@mits.edu': { id: 'h1', name: 'Prof. R. Kumar', email: 'hod@mits.edu', role: 'HOD', department: 'Computer Science' },
-        'admin@mits.edu': { id: 'a1', name: 'Admin Meera Nair', email: 'admin@mits.edu', role: 'ADMIN', department: 'Administration' },
-      };
-      const user = demoCredentials[email];
-      if (user && password === 'demo123') {
-        login(user);
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password. Try demo credentials below.');
-        setLoading(false);
-      }
-    }, 700);
+    handleApiLogin(email, password);
   };
 
   return (
@@ -168,19 +170,19 @@ export default function Login() {
               </form>
 
               <div className={styles.demoInfo}>
-                <div className={styles.demoLabel}>Demo Credentials</div>
+                <div className={styles.demoLabel}>Test Credentials (AIML Dept)</div>
                 <div className={styles.demoList}>
                   <div className={styles.demoItem}>
                     <span className={styles.demoRole}>Faculty:</span>
-                    <span className={styles.demoCred}>faculty@mits.edu / demo123</span>
+                    <span className={styles.demoCred}>surya@mits.edu / Surya@123</span>
+                  </div>
+                  <div className={styles.demoItem}>
+                    <span className={styles.demoRole}>Faculty:</span>
+                    <span className={styles.demoCred}>raghu@mits.edu / Surya@123</span>
                   </div>
                   <div className={styles.demoItem}>
                     <span className={styles.demoRole}>HOD:</span>
-                    <span className={styles.demoCred}>hod@mits.edu / demo123</span>
-                  </div>
-                  <div className={styles.demoItem}>
-                    <span className={styles.demoRole}>Admin:</span>
-                    <span className={styles.demoCred}>admin@mits.edu / demo123</span>
+                    <span className={styles.demoCred}>padma@mits.edu / Surya@123</span>
                   </div>
                 </div>
               </div>

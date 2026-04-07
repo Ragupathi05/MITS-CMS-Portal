@@ -114,8 +114,9 @@ function ContentDetailPanel({ sub, onClose, onApprove, onReject, loading }) {
   useEffect(() => { setComment(''); setConfirm(null); }, [sub.id]);
 
   const handleConfirm = () => {
-    if (confirm === 'approve') onApprove(sub.id, comment);
-    else onReject(sub.id, comment);
+    const subId = sub._id || sub.id;
+    if (confirm === 'approve') onApprove(subId, comment);
+    else onReject(subId, comment);
     setConfirm(null);
   };
 
@@ -224,28 +225,34 @@ export default function ApprovalsBoard() {
   // Keep selectedSub in sync with latest data
   useEffect(() => {
     if (!selectedSub) return;
-    const updated = submissions.find(s => s.id === selectedSub.id);
+    const updated = submissions.find(s => (s._id || s.id) === (selectedSub._id || selectedSub.id));
     if (updated) setSelectedSub(updated);
   }, [submissions]);
 
-  const handleApprove = (id, comment) => {
+  const handleApprove = async (id, comment) => {
     setActionLoading('approve');
-    setTimeout(() => {
-      updateSubmissionStatus(id, 'Approved', comment, user?.name || 'HOD');
+    try {
+      await updateSubmissionStatus(id, 'Approved', comment, user?.name || 'HOD');
+      toast('Submission approved successfully', 'success');
+    } catch (e) {
+      toast('Failed to approve submission', 'error');
+    } finally {
       setActionLoading(null);
       setSelectedSub(null);
-      toast('Submission approved successfully', 'success');
-    }, 400);
+    }
   };
 
-  const handleReject = (id, comment) => {
+  const handleReject = async (id, comment) => {
     setActionLoading('reject');
-    setTimeout(() => {
-      updateSubmissionStatus(id, 'Rejected', comment, user?.name || 'HOD');
+    try {
+      await updateSubmissionStatus(id, 'Rejected', comment, user?.name || 'HOD');
+      toast('Submission rejected', 'warning');
+    } catch (e) {
+      toast('Failed to reject submission', 'error');
+    } finally {
       setActionLoading(null);
       setSelectedSub(null);
-      toast('Submission rejected', 'warning');
-    }, 400);
+    }
   };
 
   const onDragStart = (e, id) => { setDragId(id); e.dataTransfer.effectAllowed = 'move'; };
@@ -254,7 +261,7 @@ export default function ApprovalsBoard() {
   const onDrop = (e, status) => {
     e.preventDefault();
     if (!dragId) return;
-    const sub = submissions.find(s => s.id === dragId);
+    const sub = submissions.find(s => (s._id || s.id) === dragId);
     if (sub && sub.status !== status) {
       updateSubmissionStatus(dragId, status, '', user?.name || 'HOD');
       toast(`Moved to ${status}`, status === 'Approved' ? 'success' : status === 'Rejected' ? 'warning' : 'info');
@@ -279,7 +286,7 @@ export default function ApprovalsBoard() {
         </select>
       </div>
 
-      <div className={`${styles.boardLayout} ${selectedSub ? styles.boardLayoutSplit : ''}`}>
+      <div className={styles.boardLayout}>
         <div className={styles.kanban}>
           {COLUMNS.map(col => {
             const colSubs = filtered.filter(s => s.status === col.key);
@@ -306,8 +313,8 @@ export default function ApprovalsBoard() {
                       <span>No items</span>
                     </div>
                   ) : colSubs.map(sub => (
-                    <div key={sub.id} draggable onDragStart={e => onDragStart(e, sub.id)} onDragEnd={onDragEnd}>
-                      <SubmissionCard sub={sub} onClick={setSelectedSub} isDragging={dragId === sub.id} />
+                    <div key={sub._id || sub.id} draggable onDragStart={e => onDragStart(e, sub._id || sub.id)} onDragEnd={onDragEnd}>
+                      <SubmissionCard sub={sub} onClick={setSelectedSub} isDragging={dragId === (sub._id || sub.id)} />
                     </div>
                   ))}
                 </div>
@@ -316,27 +323,28 @@ export default function ApprovalsBoard() {
           })}
         </div>
 
-        {selectedSub && (
-          isContentSub(selectedSub) ? (
-            <ContentDetailPanel
-              sub={selectedSub}
-              onClose={() => setSelectedSub(null)}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              loading={actionLoading}
-            />
-          ) : (
-            <ProfileComparisonModal
-              isOpen={!!selectedSub}
-              onClose={() => setSelectedSub(null)}
-              submission={selectedSub}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              showActions={true}
-            />
-          )
+        {selectedSub && isContentSub(selectedSub) && (
+          <ContentDetailPanel
+            sub={selectedSub}
+            onClose={() => setSelectedSub(null)}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            loading={actionLoading}
+          />
         )}
       </div>
+
+      {/* Profile modal rendered OUTSIDE boardLayout so it overlays correctly */}
+      {selectedSub && !isContentSub(selectedSub) && (
+        <ProfileComparisonModal
+          isOpen={true}
+          onClose={() => setSelectedSub(null)}
+          submission={selectedSub}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          showActions={true}
+        />
+      )}
     </div>
   );
 }

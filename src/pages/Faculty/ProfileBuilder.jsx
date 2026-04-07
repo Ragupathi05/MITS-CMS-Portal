@@ -11,6 +11,7 @@ import {
   Briefcase, Globe, Users, FileText, Link, Target, Activity, X
 } from 'lucide-react';
 import styles from './ProfileBuilder.module.css';
+import { profileAPI, facultyAPI } from '../../services/api';
 
 /* ======== TABLE SECTION COMPONENT ======== */
 function TableSection({ title, icon: IconComponent, color, columns, entries = [], isEditing, onEditToggle, onAddEntry, onUpdateEntry, onDeleteEntry }) {
@@ -366,9 +367,13 @@ export default function ProfileBuilder() {
     }
   };
 
-  const handleBasicSave = () => {
+  const handleBasicSave = async () => {
     if (isHOD) {
-      updateUser({ ...basicForm, avatar: avatarImages[0]?.url || user.avatar || null });
+      const updated = { ...basicForm, avatar: avatarImages[0]?.url || user.avatar || null };
+      updateUser(updated);
+      try {
+        await facultyAPI.update(user._id || user.id, updated);
+      } catch (e) { console.error('HOD basic save error:', e.message); }
       toast('Profile info saved', 'success');
     } else {
       setPendingBasic({ ...basicForm, avatar: avatarImages[0]?.url || user.avatar || null });
@@ -781,10 +786,16 @@ export default function ProfileBuilder() {
               {savingDraft ? '...' : <><Save size={15} /> Save Draft</>}
             </button>
             {isHOD ? (
-              <button className={styles.btnSaveChanges} onClick={() => {
-                if (pendingBasic) updateUser(pendingBasic);
+              <button className={styles.btnSaveChanges} onClick={async () => {
+                const uid = user?._id || user?.id;
+                if (pendingBasic) {
+                  updateUser(pendingBasic);
+                  try { await facultyAPI.update(uid, pendingBasic); } catch (e) { console.error(e.message); }
+                }
+                try { await profileAPI.save(uid, { ...profileSections, status: 'Approved' }); } catch (e) { console.error(e.message); }
                 setPendingBasic(null);
                 setSubmitted(true);
+                toast('Profile saved successfully', 'success');
                 setTimeout(() => setSubmitted(false), 3000);
               }}>
                 <Save size={15} /> Save Changes

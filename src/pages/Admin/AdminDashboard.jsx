@@ -130,10 +130,10 @@ function OverrideModal({ submission, onApprove, onReject, onClose }) {
         </div>
         <div className={styles.modalFooter}>
           <button className={styles.btnSecondary} onClick={onClose}>Cancel</button>
-          <button className={styles.btnDanger} disabled={!comment.trim()} onClick={() => { onReject(submission.id, `[ADMIN OVERRIDE] ${comment}`); onClose(); }}>
+          <button className={styles.btnDanger} disabled={!comment.trim()} onClick={() => { onReject(submission._id || submission.id, `[ADMIN OVERRIDE] ${comment}`); onClose(); }}>
             <XCircle size={14} /> Force Reject
           </button>
-          <button className={styles.btnSuccess} disabled={!comment.trim()} onClick={() => { onApprove(submission.id, `[ADMIN OVERRIDE] ${comment}`); onClose(); }}>
+          <button className={styles.btnSuccess} disabled={!comment.trim()} onClick={() => { onApprove(submission._id || submission.id, `[ADMIN OVERRIDE] ${comment}`); onClose(); }}>
             <CheckCircle size={14} /> Force Approve
           </button>
         </div>
@@ -145,7 +145,7 @@ function OverrideModal({ submission, onApprove, onReject, onClose }) {
 /* ── Main ── */
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const { submissions, faculty, setFaculty, updateSubmissionStatus, events, trending } = useData();
+  const { submissions, faculty, addFaculty, updateFaculty, removeFaculty, updateSubmissionStatus, events, trending } = useData();
 
   const [userSearch,    setUserSearch]    = useState('');
   const [deptFilter,    setDeptFilter]    = useState('');
@@ -189,17 +189,17 @@ export default function AdminDashboard() {
   })), [departments, faculty, submissions]);
 
   /* ── user actions ── */
-  const handleSaveUser = (data) => {
+  const handleSaveUser = async (data) => {
     if (editUser === 'new') {
-      setFaculty(prev => [...prev, { ...data, id: 'u' + Date.now(), avatar: null }]);
+      await addFaculty({ ...data, avatar: null });
     } else {
-      setFaculty(prev => prev.map(f => f.id === data.id ? { ...f, ...data } : f));
+      await updateFaculty(data._id, data);
     }
     setEditUser(null);
   };
 
-  const handleDeleteUser = (id) => {
-    setFaculty(prev => prev.filter(f => f.id !== id));
+  const handleDeleteUser = async (id) => {
+    await removeFaculty(id);
     setDeleteUser(null);
   };
 
@@ -404,7 +404,7 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {filteredUsers.map((f, i) => {
-                    const userSubs = submissions.filter(s => s.userId === f.id);
+                    const userSubs = submissions.filter(s => s.userId === (f._id || f.id));
                     return (
                       <tr key={f.id} className={styles.tableRow}>
                         <td className={styles.tdIndex}>{i + 1}</td>
@@ -575,7 +575,7 @@ export default function AdminDashboard() {
             </div>
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setDeleteUser(null)}>Cancel</button>
-              <button className={styles.btnDanger} onClick={() => handleDeleteUser(deleteUser.id)}>
+              <button className={styles.btnDanger} onClick={() => handleDeleteUser(deleteUser._id || deleteUser.id)}>
                 <Trash2 size={14} /> Remove User
               </button>
             </div>

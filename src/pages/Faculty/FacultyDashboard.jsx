@@ -3,6 +3,16 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { useData } from '../../context/DataContext';
+
+const EMPTY_PROFILE = {
+  education: [], postDoctoral: [], researchInterest: '',
+  researchProfile: {}, researchDetails: '',
+  consultancyProjects: [], fundedProjects: [], patents: [],
+  booksChapters: [], awardsRecognition: [], industryCollaboration: [],
+  academicExposure: [], eventsOrganised: [], eventsAttended: [],
+  professionalAffiliations: [], invitations: [], academicVisit: [],
+  outreachActivities: [], otherInfo: '',
+};
 import { Badge } from '../../components/common/UI';
 import {
   Edit3, Eye, FileText, Clock, CheckCircle, XCircle,
@@ -185,10 +195,13 @@ function CompletionRing({ pct, color }) {
 
 export default function FacultyDashboard() {
   const { user } = useAuth();
-  const { submissions, profileSections, profileStatus } = useData();
+  const { submissions, profileSections, approvedProfile, profileStatus } = useData();
   const navigate = useNavigate();
 
-  const userId = user?.id || 'f1';
+  const userId = user?._id || user?.id;
+
+  // Dashboard shows only approved data — draft/pending changes are not displayed
+  const displayProfile = approvedProfile || EMPTY_PROFILE;
 
   const mySubs = useMemo(
     () => submissions.filter(s => s.userId === userId).sort((a, b) => new Date(b.date) - new Date(a.date)),
@@ -205,7 +218,7 @@ export default function FacultyDashboard() {
   const rejected    = useMemo(() => mySubs.filter(s => s.status === 'Rejected'), [mySubs]);
   const drafts      = useMemo(() => mySubs.filter(s => s.status === 'Draft'),    [mySubs]);
   const recent      = useMemo(() => mySubs.slice(0, 5), [mySubs]);
-  const completion  = useMemo(() => calcCompletion(profileSections, user), [profileSections, user]);
+  const completion  = useMemo(() => calcCompletion(displayProfile, user), [displayProfile, user]);
   const { pct, color: pctColor, hint, filled, total } = completion;
   const needsAction = rejected.length + drafts.length;
 
@@ -365,25 +378,40 @@ export default function FacultyDashboard() {
 
       {/* ══ PROFILE SECTIONS ══ */}
       <div className={styles.profileSections}>
-        <TableSection title="Education" icon={GraduationCap} color="#1E3A8A" columns={EDUCATION_COLS} entries={profileSections.education} />
-        <TableSection title="Post Doctoral Experience" icon={FlaskConical} color="#7C3AED" columns={POST_DOCTORAL_COLS} entries={profileSections.postDoctoral} />
-        <TextSection title="Research Interest" icon={Target} color="#059669" value={profileSections.researchInterest} />
-        <KeyValueSection title="Research Profile" icon={Link} color="#D97706" fields={RESEARCH_PROFILE_FIELDS} value={profileSections.researchProfile} />
-        <TextSection title="Research Details" icon={FileText2} color="#0891B2" value={profileSections.researchDetails} />
-        <TableSection title="Consultancy Projects" icon={Briefcase} color="#B45309" columns={CONSULTANCY_COLS} entries={profileSections.consultancyProjects} />
-        <TableSection title="Funded Projects" icon={FolderOpen} color="#DC2626" columns={FUNDED_COLS} entries={profileSections.fundedProjects} />
-        <TableSection title="Patents" icon={Lightbulb} color="#4F46E5" columns={PATENTS_COLS} entries={profileSections.patents} />
-        <TableSection title="Books / Chapters Published" icon={BookOpen} color="#0D9488" columns={BOOKS_COLS} entries={profileSections.booksChapters} />
-        <TableSection title="Awards & Recognition" icon={Award} color="#EA580C" columns={AWARDS_COLS} entries={profileSections.awardsRecognition} />
-        <TableSection title="Industry Collaboration" icon={Building2} color="#2563EB" columns={INDUSTRY_COLS} entries={profileSections.industryCollaboration} />
-        <TableSection title="Academic Exposure" icon={Globe} color="#7C3AED" columns={ACADEMIC_EXPOSURE_COLS} entries={profileSections.academicExposure} />
-        <TableSection title="Events Organised" icon={Calendar} color="#059669" columns={EVENTS_ORG_COLS} entries={profileSections.eventsOrganised} />
-        <TableSection title="Events Attended" icon={Users} color="#0891B2" columns={EVENTS_ATT_COLS} entries={profileSections.eventsAttended} />
-        <TableSection title="Professional Affiliations" icon={Users} color="#4F46E5" columns={AFFILIATIONS_COLS} entries={profileSections.professionalAffiliations} />
-        <TableSection title="Invitations" icon={Calendar} color="#DC2626" columns={INVITATIONS_COLS} entries={profileSections.invitations} />
-        <TableSection title="Academic Visit" icon={Globe} color="#B45309" columns={ACADEMIC_VISIT_COLS} entries={profileSections.academicVisit} />
-        <TableSection title="Outreach Activities" icon={Activity} color="#0D9488" columns={OUTREACH_COLS} entries={profileSections.outreachActivities} />
-        <TextSection title="Other Information" icon={Info} color="#6366F1" value={profileSections.otherInfo} />
+        {profileStatus === 'Pending' && (
+          <div style={{ padding: '12px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, marginBottom: 16, fontSize: 14, color: '#92400E' }}>
+            ⏳ Your profile update is <strong>pending HOD approval</strong>. The sections below show your last approved data.
+          </div>
+        )}
+        {profileStatus === 'Draft' && (
+          <div style={{ padding: '12px 16px', background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 8, marginBottom: 16, fontSize: 14, color: '#475569' }}>
+            📝 Your profile is in <strong>Draft</strong> state. Submit for HOD approval to display your data here.
+          </div>
+        )}
+        {!approvedProfile && profileStatus === 'Approved' && (
+          <div style={{ padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, marginBottom: 16, fontSize: 14, color: '#15803D' }}>
+            ✅ Profile approved — data is displayed below.
+          </div>
+        )}
+        <TableSection title="Education" icon={GraduationCap} color="#1E3A8A" columns={EDUCATION_COLS} entries={displayProfile.education} />
+        <TableSection title="Post Doctoral Experience" icon={FlaskConical} color="#7C3AED" columns={POST_DOCTORAL_COLS} entries={displayProfile.postDoctoral} />
+        <TextSection title="Research Interest" icon={Target} color="#059669" value={displayProfile.researchInterest} />
+        <KeyValueSection title="Research Profile" icon={Link} color="#D97706" fields={RESEARCH_PROFILE_FIELDS} value={displayProfile.researchProfile} />
+        <TextSection title="Research Details" icon={FileText2} color="#0891B2" value={displayProfile.researchDetails} />
+        <TableSection title="Consultancy Projects" icon={Briefcase} color="#B45309" columns={CONSULTANCY_COLS} entries={displayProfile.consultancyProjects} />
+        <TableSection title="Funded Projects" icon={FolderOpen} color="#DC2626" columns={FUNDED_COLS} entries={displayProfile.fundedProjects} />
+        <TableSection title="Patents" icon={Lightbulb} color="#4F46E5" columns={PATENTS_COLS} entries={displayProfile.patents} />
+        <TableSection title="Books / Chapters Published" icon={BookOpen} color="#0D9488" columns={BOOKS_COLS} entries={displayProfile.booksChapters} />
+        <TableSection title="Awards & Recognition" icon={Award} color="#EA580C" columns={AWARDS_COLS} entries={displayProfile.awardsRecognition} />
+        <TableSection title="Industry Collaboration" icon={Building2} color="#2563EB" columns={INDUSTRY_COLS} entries={displayProfile.industryCollaboration} />
+        <TableSection title="Academic Exposure" icon={Globe} color="#7C3AED" columns={ACADEMIC_EXPOSURE_COLS} entries={displayProfile.academicExposure} />
+        <TableSection title="Events Organised" icon={Calendar} color="#059669" columns={EVENTS_ORG_COLS} entries={displayProfile.eventsOrganised} />
+        <TableSection title="Events Attended" icon={Users} color="#0891B2" columns={EVENTS_ATT_COLS} entries={displayProfile.eventsAttended} />
+        <TableSection title="Professional Affiliations" icon={Users} color="#4F46E5" columns={AFFILIATIONS_COLS} entries={displayProfile.professionalAffiliations} />
+        <TableSection title="Invitations" icon={Calendar} color="#DC2626" columns={INVITATIONS_COLS} entries={displayProfile.invitations} />
+        <TableSection title="Academic Visit" icon={Globe} color="#B45309" columns={ACADEMIC_VISIT_COLS} entries={displayProfile.academicVisit} />
+        <TableSection title="Outreach Activities" icon={Activity} color="#0D9488" columns={OUTREACH_COLS} entries={displayProfile.outreachActivities} />
+        <TextSection title="Other Information" icon={Info} color="#6366F1" value={displayProfile.otherInfo} />
       </div>
 
     </div>

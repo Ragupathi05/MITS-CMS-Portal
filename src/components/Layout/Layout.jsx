@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, User, FileText, CheckSquare, Send, Users,
-  LogOut, Bell, ChevronDown, Briefcase, Home, Menu,
+  LogOut, Bell, ChevronDown, Briefcase, Home, Menu, Pencil, Plus,
   CheckCircle2, XCircle, Clock, Info, AlertTriangle,
   Trash2, CheckCheck, Inbox,
 } from 'lucide-react';
@@ -23,15 +23,18 @@ const NAV_LINKS = {
     { label: 'My Submissions', icon: Send,          to: '/submissions'  },
   ],
   HOD: [
-    { label: 'Home',           icon: Home,          to: '/hod-dashboard' },
-    { label: 'My Profile',     icon: User,          to: '/dashboard'     },
+    { label: 'Home',           icon: Home,          to: '/dashboard'     },
+    { label: 'My Profile',     icon: User,          to: '/hod-profile'   },
+    { label: 'Edit Profile',   icon: Pencil,        to: '/profile'       },
     { label: 'Approvals',      icon: CheckSquare,   to: '/approvals'     },
     { label: 'Faculty List',   icon: Users,         to: '/faculty-list'  },
     { label: 'Content Studio', icon: Briefcase,     to: '/content'       },
+    { label: 'New Content',    icon: Plus,          to: '/content/edit'  },
   ],
   ADMIN: [
     { label: 'Control Panel',  icon: LayoutDashboard, to: '/dashboard'    },
     { label: 'Content Studio', icon: Briefcase,       to: '/content'      },
+    { label: 'New Content',    icon: Plus,            to: '/content/edit' },
     { label: 'Faculty List',   icon: Users,           to: '/faculty-list' },
     { label: 'Approvals',      icon: CheckSquare,     to: '/approvals'    },
     { label: 'Submissions',    icon: Send,            to: '/submissions'  },
@@ -337,7 +340,7 @@ export default function Layout({ children }) {
                     <div className={styles.dropdownUserEmail}>{user?.email}</div>
                     <span className={styles.dropdownRoleBadge}>{user?.role}</span>
                   </div>
-                  <div className={styles.dropdownItem} onClick={() => { navigate('/profile'); setProfileOpen(false); }}>
+                  <div className={styles.dropdownItem} onClick={() => { navigate(user?.role === 'HOD' ? '/hod-profile' : '/profile'); setProfileOpen(false); }}>
                     <User size={15} /> My Profile
                   </div>
                   {user?.role !== 'HOD' && (
