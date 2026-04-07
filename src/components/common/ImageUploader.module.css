@@ -1,0 +1,184 @@
+/* src/components/common/ImageUploader.module.css */
+
+.uploaderRoot { display: flex; flex-direction: column; gap: 12px; }
+
+.dropZone {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  background: var(--gray-50);
+}
+.dropZone:hover, .dropZoneDragging {
+  border-color: var(--primary-light);
+  background: var(--primary-bg);
+}
+
+.dropIcon { color: var(--gray-400); margin-bottom: 4px; }
+.dropText { font-size: 0.875rem; color: var(--gray-600); }
+.dropBold { color: var(--primary-light); font-weight: 600; }
+.dropSub { font-size: 0.75rem; color: var(--gray-400); }
+
+.progressWrap {
+  padding: 12px 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--error-bg);
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  color: var(--error);
+  font-size: 0.8rem;
+}
+.errorBanner button {
+  margin-left: auto;
+  background: none;
+  color: var(--error);
+  cursor: pointer;
+  display: flex;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.imageCard {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--gray-200);
+  aspect-ratio: 1;
+  transition: var(--transition);
+}
+.imageCardCover { border-color: var(--warning); }
+.imageCard:hover .imageActions { opacity: 1; }
+
+.imageThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imageActions {
+  position: absolute;
+  inset: 0;
+  background: rgba(15,23,42,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0;
+  transition: var(--transition);
+}
+.imageActions button {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  transition: var(--transition);
+}
+.imageActions button:hover { background: rgba(255,255,255,0.35); }
+.imageActions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.removeBtn { background: rgba(239,68,68,0.6) !important; }
+.removeBtn:hover { background: rgba(239,68,68,0.85) !important; }
+
+.coverBadge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--warning);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* CIRCULAR PHOTO UPLOAD */
+.circularWrapper {
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.circularPreview {
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--gray-100);
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.circularPreview:hover .circularOverlay { opacity: 1; }
+
+.circularImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.circularOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15,23,42,0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.circularPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  color: var(--gray-400);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.uploadingLabel { font-size: 0.75rem; color: var(--primary-light); font-weight: 500; }
+.uploadError { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--error); }
+.circularUploadingText { font-size: 0.85rem; font-weight: 700; color: white; }
+.circularUploadingText { font-size: 0.85rem; font-weight: 700; color: white; }

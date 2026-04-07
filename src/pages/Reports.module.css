@@ -1,0 +1,81 @@
+/* src/pages/Reports.module.css */
+.root { animation: fadeIn 0.3s ease; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.chartTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.chartBody { display: flex; flex-direction: column; gap: 14px; }
+
+.barRow {
+  display: grid;
+  grid-template-columns: 120px 1fr 36px;
+  align-items: center;
+  gap: 12px;
+}
+
+.barLabel {
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  height: 10px;
+  background: var(--gray-100);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--grad-primary);
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.barFill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 100%);
+  border-radius: 99px;
+}
+
+.barValue {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--gray-600);
+  text-align: right;
+}
+
+.noData {
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  padding: 32px;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--gray-200);
+}
+
+@media (max-width: 640px) {
+  .grid { grid-template-columns: 1fr; }
+  .barRow { grid-template-columns: 90px 1fr 28px; }
+}

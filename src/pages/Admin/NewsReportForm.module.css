@@ -1,0 +1,265 @@
+/* src/pages/Admin/NewsReportForm.module.css */
+
+.formRoot {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Progress Bar */
+.progressBar {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.progressTrack {
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #1E3A8A, #2563EB);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* Section */
+.section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.sectionExpanded {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.08);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sectionHeader:hover {
+  background: var(--gray-100);
+}
+
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionNum {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--gray-400);
+  background: var(--gray-200);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+}
+
+.sectionIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sectionTitle {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gray-800);
+}
+
+.sectionHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.completeBadge { color: #10B981; }
+.chevron { color: var(--gray-400); }
+
+.sectionBody {
+  padding: 18px;
+  border-top: 1px solid var(--gray-100);
+}
+
+/* Field Grid */
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Select */
+.selectInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  background: var(--white);
+}
+
+.selectInput:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+/* Read Only */
+.readOnly {
+  background: var(--gray-100) !important;
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+/* Textarea */
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  resize: vertical;
+  font-family: inherit;
+  background: var(--white);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+.charCount {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Content Grid */
+.contentGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Media Grid */
+.mediaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* Tagging Grid */
+.taggingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* Radio Group */
+.radioGroup {
+  display: flex;
+  gap: 16px;
+  padding-top: 6px;
+  align-items: center;
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.radioItem input { accent-color: var(--primary); }
+
+/* Status */
+.statusRow {
+  display: flex;
+  gap: 12px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.statusBadge.draft {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.statusBadge.published {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.statusBadge.archived {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Form Buttons */
+.formButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fieldGrid,
+  .mediaGrid,
+  .taggingGrid {
+    grid-template-columns: 1fr;
+  }
+}
