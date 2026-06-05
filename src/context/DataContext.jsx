@@ -153,7 +153,7 @@ export function DataProvider({ children }) {
 
         // Load profile for current user (faculty and HOD)
         try {
-          const prof = await profileAPI.get(userId);
+          const prof = await profileAPI.get(userId, user?.role || 'FACULTY');
           setProfileSections(prof);
           setProfileStatus(prof.status || 'Draft');
           if (prof.status === 'Approved') setApprovedProfile(prof);
@@ -250,7 +250,7 @@ export function DataProvider({ children }) {
         const facultyId = updated.userId || updated.user_id;
         if (facultyId) {
           try {
-            const freshProfile = await profileAPI.get(facultyId);
+            const freshProfile = await profileAPI.get(facultyId, updated?.role || user?.role || 'FACULTY');
             setProfileSections(freshProfile);
             setApprovedProfile(freshProfile);
             setProfileStatus('Approved');

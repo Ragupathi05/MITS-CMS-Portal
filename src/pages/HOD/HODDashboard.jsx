@@ -8,14 +8,13 @@ import {
 } from 'lucide-react';
 import Avatar from '../../components/common/Avatar';
 import styles from './HODDashboard.module.css';
+import { DEPARTMENTS } from '../../constants/departments';
 
-const DEPT = {
-  name: 'Computer Science & Engineering',
-  overview: 'The Department of Computer Science & Engineering at MITS is committed to excellence in education, research, and innovation — preparing students for successful careers in the rapidly evolving field of computer science.',
-  vision: 'To be a center of excellence in computer science education and research, producing globally competent professionals who contribute to technological advancement and societal development.',
+const DEPT_INFO = {
+  overview: 'committed to excellence in education, research, and innovation — preparing students for successful careers in the rapidly evolving field of technology.',
+  vision: 'To be a center of excellence in education and research, producing globally competent professionals who contribute to technological advancement and societal development.',
   mission: 'To provide quality education through innovative teaching methods, promote research and development, and foster industry-academia collaboration for the holistic development of students.',
   totalStudents: '1200+',
-  totalFaculty: '45',
   labs: '12',
 };
 
@@ -69,6 +68,12 @@ function ContentCard({ item, fallbackIcon: FallbackIcon }) {
 
 export default function HODDashboard() {
   const { user } = useAuth();
+  const deptMeta = DEPARTMENTS.find(d => d.code === user?.department);
+  const DEPT = {
+    name: deptMeta?.name || user?.department || 'Department',
+    ...DEPT_INFO,
+    overview: `The ${deptMeta?.name || user?.department || 'Department'} at MITS is ${DEPT_INFO.overview}`,
+  };
   const { submissions, getPublicEvents, getPublicTrending, getPublicFaculty } = useData();
 
   const deptSubs    = submissions.filter(s => s.department === user?.department);
@@ -97,7 +102,7 @@ export default function HODDashboard() {
     });
 
   const STATS = [
-    { icon: Users,         label: 'Total Faculty',   value: deptFaculty.length || DEPT.totalFaculty, color: '#7C3AED', bg: '#F5F3FF' },
+    { icon: Users,         label: 'Total Faculty',   value: deptFaculty.length || '—', color: '#7C3AED', bg: '#F5F3FF' },
     { icon: GraduationCap, label: 'Total Students',  value: DEPT.totalStudents,  color: '#0369A1', bg: '#E0F2FE' },
     { icon: BookOpen,      label: 'Events Published', value: eventItems.length,  color: '#D97706', bg: '#FFFBEB' },
     { icon: Award,         label: 'Active MoUs',      value: activeMoUs,         color: '#059669', bg: '#ECFDF5' },
@@ -122,7 +127,7 @@ export default function HODDashboard() {
             <p className={styles.deptOverview}>{DEPT.overview}</p>
             <div className={styles.heroChips}>
               {[
-                { icon: Users,         label: `${DEPT.totalFaculty} Faculty` },
+                { icon: Users,         label: `${deptFaculty.length || '?'} Faculty` },
                 { icon: GraduationCap, label: `${DEPT.totalStudents} Students` },
                 { icon: Building2,     label: `${DEPT.labs} Labs` },
               ].map(({ icon: Icon, label }) => (

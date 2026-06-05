@@ -9,8 +9,9 @@ This project now uses:
 2. In Netlify, create a new site from the GitHub repo.
 3. Build command: `npm run build`
 4. Publish directory: `dist`
-5. Set environment variable:
+5. Set environment variables:
    - `VITE_API_BASE_URL=https://your-render-backend-url.onrender.com`
+   - `VITE_ENABLE_MOCK_LOGIN=false`
 
 ## 2. Backend (Render)
 1. Create a new Web Service on Render using this repo.

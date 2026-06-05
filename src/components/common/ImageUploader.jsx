@@ -5,7 +5,7 @@ import styles from './ImageUploader.module.css';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_MB = 5;
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/backend';
+const API_URL = import.meta.env.VITE_API_BASE_URL || '/backend';
 
 export default function ImageUploader({
   images = [], onChange, multiple = true, circular = false,

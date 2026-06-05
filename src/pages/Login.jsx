@@ -22,6 +22,8 @@ export default function Login() {
     setError('');
   };
 
+  const useMockLogin = import.meta.env.VITE_ENABLE_MOCK_LOGIN === 'true';
+
   const mockUsers = [
     { id: '1', name: 'Surya', email: 'surya@mits.edu', password: 'Surya@123', role: 'FACULTY', department: 'AIML', designation: 'Assistant Professor', avatar: null },
     { id: '2', name: 'Raghu', email: 'raghu@mits.edu', password: 'Surya@123', role: 'FACULTY', department: 'AIML', designation: 'Assistant Professor', avatar: null },
@@ -60,14 +62,24 @@ export default function Login() {
         role = 'hod';
       }
 
-      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost/backend';
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/backend';
       const res = await fetch(`${apiBase}/login.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: loginEmail.split('@')[0], password: loginPassword, role }),
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || 'Login failed');
+
+      const rawText = await res.text();
+      let data;
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error('Backend returned an HTML/invalid response. Make sure the PHP backend is running and the API path is correct.');
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Login failed');
+      }
       
       // Ensure role is uppercase to match app expectations
       const userData = {
@@ -79,15 +91,22 @@ export default function Login() {
       login(userData, data.token);
       navigate('/dashboard');
     } catch (err) {
-      // network error or server down -> use mock
-      try {
-        const data = localMockLogin(loginEmail, loginPassword);
-        login(data);
-        navigate('/dashboard');
-      } catch (mockErr) {
-        setError(mockErr.message || err.message || 'Login failed');
-        setLoading(false);
+      // Only fall back to mocked users for explicit local development testing.
+      if (useMockLogin) {
+        try {
+          const data = localMockLogin(loginEmail, loginPassword);
+          login(data);
+          navigate('/dashboard');
+          return;
+        } catch (mockErr) {
+          setError(mockErr.message || err.message || 'Login failed');
+          setLoading(false);
+          return;
+        }
       }
+
+      setError(err.message || 'Backend login failed. Please verify the API URL and database connection.');
+      setLoading(false);
     }
   };
 

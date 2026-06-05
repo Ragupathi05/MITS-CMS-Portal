@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/backend';
+const API_URL = import.meta.env.VITE_API_BASE_URL || '/backend';
 
 const originalFetch = window.fetch;
 const fetch = async (url, options = {}) => {
@@ -25,9 +25,15 @@ export const loginUser = async (username, password, role) => {
   }
 };
 
-// Mock API functions (replace with real backend later)
 export const facultyAPI = {
-  getAll: async () => [],
+  getAll: async () => {
+    try {
+      const response = await fetch(`${API_URL}/get_faculty.php`);
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message);
+      return data.faculty;
+    } catch { return []; }
+  },
   create: async (data) => ({ _id: Date.now(), ...data }),
   update: async (id, data) => {
     const { avatar, ...rest } = data;
@@ -44,8 +50,8 @@ export const facultyAPI = {
 };
 
 export const profileAPI = {
-  get: async (userId) => {
-    const response = await fetch(`${API_URL}/get_profile.php?faculty_id=${userId}`);
+  get: async (userId, role = 'FACULTY') => {
+    const response = await fetch(`${API_URL}/get_profile.php?faculty_id=${userId}&role=${role}`);
     const data = await response.json();
     if (!data.success) throw new Error(data.message);
     return data.profile;

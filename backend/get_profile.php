@@ -6,6 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $faculty_id = $_GET['faculty_id'] ?? '';
+$user_role  = strtoupper($_GET['role'] ?? 'FACULTY');  // FACULTY or HOD
 
 if (empty($faculty_id)) {
     echo json_encode(['success' => false, 'message' => 'Faculty ID required']);
@@ -36,18 +37,23 @@ try {
         'otherInfo' => ''
     ];
 
-    // Get faculty/HOD status + basic info — check both tables
-    $stmt = $pdo->prepare("SELECT profile_status, faculty_name AS display_name, designation, email, qualification, avatar FROM faculty_login WHERE id = ?");
-    $stmt->execute([$faculty_id]);
-    $faculty = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $isHod = false;
-    if (!$faculty) {
-        // Try hod_login
+    // Get basic info — check the correct table first based on role
+    $isHod = ($user_role === 'HOD');
+    if ($isHod) {
         $stmt = $pdo->prepare("SELECT profile_status, name AS display_name, designation, email, qualification, avatar FROM hod_login WHERE id = ?");
         $stmt->execute([$faculty_id]);
         $faculty = $stmt->fetch(PDO::FETCH_ASSOC);
-        $isHod = (bool)$faculty;
+        if (!$faculty) {
+            // fallback
+            $stmt = $pdo->prepare("SELECT profile_status, faculty_name AS display_name, designation, email, qualification, avatar FROM faculty_login WHERE id = ?");
+            $stmt->execute([$faculty_id]);
+            $faculty = $stmt->fetch(PDO::FETCH_ASSOC);
+            $isHod = false;
+        }
+    } else {
+        $stmt = $pdo->prepare("SELECT profile_status, faculty_name AS display_name, designation, email, qualification, avatar FROM faculty_login WHERE id = ?");
+        $stmt->execute([$faculty_id]);
+        $faculty = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     if ($faculty) {
